@@ -62,8 +62,6 @@ class LTRCommunity(Community):
         self.losses = []
         self.accuracies = []
         self.accuracy = []
-        if quantize:
-            self.community_id = self.community_id[:-1] + bytes([0x01])
         self.add_message_handler(Query_res, self.on_message)
         self.ready_for_input = threading.Event()
         self.lamport_clock = 0
