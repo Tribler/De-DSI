@@ -1,6 +1,11 @@
 # De-DSI
 This code is the implementation linked to the decentralized experiment (experiment 3) of the paper De-DSI: 
-Decentralized Differentiable Search Index, DOI: https://doi.org/10.1145/3642970.3655837.
+Decentralized Differentiable Search Index, 
+
+DOI: https://doi.org/10.1145/3642970.3655837.
+
+Arxiv link: https://arxiv.org/abs/2404.12237
+
 
 In order to run the decentralized experiment the following steps should be followed:
 
