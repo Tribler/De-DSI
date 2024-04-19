@@ -44,11 +44,9 @@ class LTRCommunity(Community):
         
         with open('./output.log', 'a') as file:
                 file.write(' doc nbr:' + str(number_of_docs_for_this_user) + ' ')
-        
-        self.df = df[df['doc_id'].isin(list(docs_to_be_used.sample(number_of_docs_for_this_user).index))]
+        self.df = df[df['doc_id'].isin(list(docs_to_be_used.sample(number_of_docs_for_this_user)['doc_id']))]
        	with open('./output.log', 'a') as file:
                 file.write(' df size ' + str(self.df.shape[0]) + ' ')
-        
 
         self.batches_so_far = 0
         self.current_queries = []
@@ -260,8 +258,6 @@ for s in previous_shards:
     all_docs_till_now.extend(list(prev_docs))
     print ('docs till now', len(all_docs_till_now))
 df = df[~df['doc_id'].isin(all_docs_till_now)]
-
-
 
 root_folder_for_shard = f'group{shard}'
 os.makedirs(f'aggregated_results/{root_folder_for_shard}/datasets', exist_ok=True)
