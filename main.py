@@ -28,32 +28,6 @@ print(f"Using device: {device}")
 # Enhance normal dataclasses for IPv8 (see the IPV8 serialization documentation)
 dataclass = overwrite_dataclass(dataclass)
 
-start_time = time()
-print (start_time)
-df = pd.read_csv('./orcas.tsv', sep='\t', header=None,
-                 names=['query_id', 'query', 'doc_id', 'doc'])
-
-# Filter out docs from previous run for peers-split-in-two-groups experiment
-# df_filter_out1 = pd.read_csv(os.path.join(PATH_TO_PREVIOUS_EXPERIMENT1))['doc_id'].unique()
-# df_filter_out2 = pd.read_csv(os.path.join(PATH_TO_PREVIOUS_EXPERIMENT2))['doc_id'].unique()
-# df = df[~df['doc_id'].isin(df_filter_out1)]
-# df = df[~df['doc_id'].isin(df_filter_out2)]
-
-cnter = df.groupby('doc_id').count().sort_values('query',ascending = False) # get most referenced docs subset
-cnter = cnter[cnter['query']>=2] # remove docs that are referenced only once to make stratify work
-docs_to_be_used = cnter.sample(total_doc_count).reset_index()
-df = df[df['doc_id'].isin(list(docs_to_be_used['doc_id']))]
-
-docs_to_be_used = docs_to_be_used.set_index('doc_id')
-
-with open('./output.log', 'a') as file:
-                file.write(' doc nbr:' + str(docs_to_be_used.shape[0]) + ' shape:' + str(df.shape[0]))
-
-train_df, test_df = train_test_split(df, test_size=0.5, random_state=42, stratify=df['doc_id']) # split into train and test
-train_df.to_csv('data/datasets/train_df.csv')
-test_df.to_csv('data/datasets/test_df.csv')
-df = train_df.copy()
-
 @dataclass(msg_id=1)  # The value 1 identifies this message and must be unique per community
 class Query_res:
     query: str
@@ -142,14 +116,14 @@ class LTRCommunity(Community):
 
         if self.batches_so_far % batches_save_threshold == 0:
             pd.DataFrame(list(zip(self.timestamps, self.accuracies)),
-                         columns = ['timestamps','accuracies']).to_csv(f'data/accuracies/{self.my_peer.address[1]}_accuracies.csv')
+                         columns = ['timestamps','accuracies']).to_csv(f'aggregated_results/{root_folder_for_shard}/accuracies/{self.my_peer.address[1]}_accuracies.csv')
             pd.DataFrame(list(zip(self.timestamps, self.losses)),
-                         columns = ['timestamps','losses']).to_csv(f'data/losses/{self.my_peer.address[1]}_losses.csv')
-            self.model.save_pretrained(f'data/models/{self.my_peer.address[1]}_{strftime("%Y-%m-%d %H%M%S", localtime())}_my_t5_model')
-            self.df.to_csv(f'data/datasets/{self.my_peer.address[1]}_df.csv')
+                         columns = ['timestamps','losses']).to_csv(f'aggregated_results/{root_folder_for_shard}/losses/{self.my_peer.address[1]}_losses.csv')
+            self.model.save_pretrained(f'aggregated_results/{root_folder_for_shard}/models/{self.my_peer.address[1]}_{self.batches_so_far}')
+            self.df.to_csv(f'aggregated_results/{root_folder_for_shard}/datasets/{self.my_peer.address[1]}_df.csv')
             # self.change_df(test_df)
             # if self.accuracies_avg>0.95:
-            if self.batches_so_far > 10000:
+            if self.batches_so_far > 10:
                 raise SystemExit
                 end_time = time()
                 print (end_time - start_time)
@@ -257,4 +231,57 @@ async def start_communities() -> None:
     await run_forever()
 
 
+
+
+start_time = time()
+print (start_time)
+all_docs_till_now = []
+
+df = pd.read_csv('./orcas.tsv', sep='\t', header=None,
+                 names=['query_id', 'query', 'doc_id', 'doc'])
+
+
+def find_shard_folders(directory):
+    """
+    List all folders within a given directory that have 'X' in their name.
+
+    :param directory: The root directory to search within.
+    :return: A list of paths to folders that contain 'X' in their name.
+    """
+    folders = []
+    for root, dirs, files in os.walk(directory):
+        # Filter directories in the current root that contain 'X'
+        matched_dirs = [os.path.join(root, d) for d in dirs if 'group' in d]
+        folders.extend(matched_dirs)
+
+    return folders
+previous_shards = find_shard_folders('aggregated_results')
+print (previous_shards)
+for s in previous_shards:
+    prev_docs = pd.read_csv(f'{s}/datasets/train_df.csv')['doc_id'].unique()
+    all_docs_till_now.extend(list(prev_docs))
+    print ('docs till now', len(all_docs_till_now))
+df = df[~df['doc_id'].isin(all_docs_till_now)]
+
+
+
+root_folder_for_shard = f'group{shard}'
+os.makedirs(f'aggregated_results/{root_folder_for_shard}/datasets', exist_ok=True)
+os.makedirs(f'aggregated_results/{root_folder_for_shard}/models', exist_ok=True)
+os.makedirs(f'aggregated_results/{root_folder_for_shard}/accuracies', exist_ok=True)
+os.makedirs(f'aggregated_results/{root_folder_for_shard}/losses', exist_ok=True)
+cnter = df.groupby('doc_id').count().sort_values('query',ascending = False) # get most referenced docs subset
+cnter = cnter[cnter['query']>=2] # remove docs that are referenced only once to make stratify work
+docs_to_be_used = cnter.sample(total_doc_count).reset_index()
+df = df[df['doc_id'].isin(list(docs_to_be_used['doc_id']))]
+
+
+with open('./output.log', 'a') as file:
+                file.write(' doc nbr:' + str(docs_to_be_used.shape[0]) + ' shape:' + str(df.shape[0]))
+
+train_df, test_df = train_test_split(df, test_size=0.5, random_state=42, stratify=df['doc_id']) # split into train and test
+train_df.to_csv(f'aggregated_results/{root_folder_for_shard}/datasets/train_df.csv')
+test_df.to_csv(f'aggregated_results/{root_folder_for_shard}/datasets/test_df.csv')
+
+df = train_df.copy()
 run(start_communities())

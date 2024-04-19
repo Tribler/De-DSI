@@ -8,14 +8,25 @@ In order to run the decentralized experiment the following steps should be follo
 * Install the required packages in 'requirements.txt'. When running this on Linux or MacOS, 
 some problems with libsodium may be encountered. If so, see https://doc.libsodium.org/installation.
 If that doesn't solve it
-* Copy the 'data' folder as many times as the number of shards which you'd like to train
-* Run main.py, it will populate the data folder with information about the training process 
-(losses, accuracies, checkpointed models, datasets for each peer)
-* Rename the folder to 'groupX' where X denotes the number of the shard and place it in the folder called 'aggregated_results'
-* Once you have enough shards trained, you can run the ensemble in the 'Computing inter/intra-group performances.ipynb' notebooks
-* The notebook which aggregates the results of the ensembles is the 'Data Analysis of Group Performances.ipynb'
-* Depending on the number of shards required, small changes may need to be applied to the jupyter notebooks
+* The hyper-parameters can be found in 'vars.py'
+* The 'main.py' script creates a folder structure: aggregated_results/groupX/{accuracies,datasets,losses,models}, where
+X is the 'shard' variable from vars.py of the shard trained
+* By varying the shard variable from vars.py the reader can train multiple shards, denoted as 'group' in the folder 'aggregated_results'
+* After training a number of shards, the reader can run the 'Computing inter-group performance.ipynb' or 
+'Computing intra-group performance.ipynb' jupyter notebooks which are designed to run the ensemble model 
+on one shard or on multiple shards:
+  * 'Computing intra-group performance.ipynb' picks a number of models from each shard and tests the ensemble 
+  on the same shard from where the models were picked from
+  * 'Computing inter-group performance.ipynb' picks a number of models from each shard and tests the ensemble on the dataset comprised
+  of all shards together
+
+  The jupyter notebooks are made to run for 2 shards currently, if the reader decides to include more 
+small modifications to accommodate the code may need to be performed.
+
+* The 'Data Analysis of Group Performances.ipynb' is meant to take the output of the previous notebooks and aggregate 
+them in the 'df_total' table
 
 
-
-
+NOTE: The Jupyter Notebooks are meant to guide the reader through the process of estimating the performance of the ensembles.
+But the reader may also perform this analysis themselves based on the output placed in the 'groupX' folder from 'aggregated_results', 
+after running 'main.py', if they so choose.
