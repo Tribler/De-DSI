@@ -9,7 +9,7 @@ Arxiv link: https://arxiv.org/abs/2404.12237
 
 In order to run the decentralized experiment the following steps should be followed:
 
-* Download the [ORCAS](https://microsoft.github.io/msmarco/ORCAS.html) dataset and place it in the root folder
+* Download the [ORCAS](https://microsoft.github.io/msmarco/ORCAS.html) 'click data' dataset and place it in the root folder
 * Install the required packages in 'requirements.txt'. When running this on Linux or MacOS, 
 some problems with libsodium may be encountered. If so, see https://doc.libsodium.org/installation.
 * The hyper-parameters can be found in 'vars.py'
