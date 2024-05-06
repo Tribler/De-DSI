@@ -119,7 +119,7 @@ class LTRCommunity(Community):
             self.df.to_csv(f'aggregated_results/{root_folder_for_shard}/datasets/{self.my_peer.address[1]}_df.csv')
             # self.change_df(test_df)
             # if self.accuracies_avg>0.95:
-            if self.batches_so_far > 10:
+            if self.batches_so_far > 10000:
                 raise SystemExit
                 end_time = time()
                 print (end_time - start_time)
